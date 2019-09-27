@@ -1,45 +1,48 @@
+#!/usr/bin/python
+
+
 #!/usr/bin/env python
 
 #################################################################################################
 #
-#  usage.py -- Get Rally Usage Report
+#  lookup.py -- Look up subscription ID from email address or user name
 #
 USAGE = """
-Usage: python usage.py -s SubID -d Days -u Username -p Password
+Usage: python lookup.py -e User's email address -l User's login ID -n User's name -u Username -p Password
 """
 #################################################################################################
 
-import sys, os, getopt
+import sys, os, getopt, json
 import httplib, urllib, urllib2
-import datetime
-import time
-from datetime import date, timedelta
 from base64 import b64encode
 import cookielib, Cookie, os
 import csv
 
 #################################################################################################
-
 errout = sys.stderr.write
-
 #################################################################################################
 
 def main(argv):
 
-	opts, args = getopt.getopt(argv,"s:d:u:p:")
+	opts, args = getopt.getopt(argv,"e:l:n:u:p:")
 
-	subscription_id=''
-	my_username=''
-	my_password=''
-	ndays=''
+	my_username = ''
+	my_password = ''
+	query = ''
 
 	for opt, arg in opts:
-		if opt == '-s':
-			subscription_id = arg
-		elif opt == '-d':
-			ndays = arg
+		if opt == '-e':
+			query = '(EmailAddress CONTAINS "%s")' % arg
+
+		elif opt == '-l':
+			query = '(UserName CONTAINS "%s")' % arg
+
+		elif opt == '-n':
+			query = '(((FirstName CONTAINS "%s") OR (LastName CONTAINS "%s")) OR (DisplayName CONTAINS "%s"))' % arg
+
 		elif opt == '-u':
 			my_username = arg
+
 		elif opt == '-p':
 			my_password = arg
 
@@ -47,14 +50,9 @@ def main(argv):
 	authentication_endpoint = "slm/webservice/v2.0/security/authorize"
 	authentication_url="https://%s/%s" % (rally_host, authentication_endpoint)
 
-	# Construct Usage URL
-	datetime_format_string = "%m/%d/%Y"
-	end_string = datetime.datetime.now().strftime(datetime_format_string)
-	yesterday_date = date.today()-timedelta(days=int(ndays))
-	start_string = yesterday_date.strftime(datetime_format_string)
-
-	usage_endpoint = "slm/admin/tools/usageReportCSV.sp?startDate=%s&endDate=%s&subscriptionId=%s" % (start_string, end_string, subscription_id )
-	usage_url = "https://%s/%s" % (rally_host, usage_endpoint)
+	# Construct API URL
+	api_endpoint = "slm/webservice/v2.0/user?query=%s&fetch=SubscriptionID,DisplayName,FirstName,LastName,UserName,EmailAddress" % (urllib.quote(query))
+	rally_url = "https://%s/%s" % (rally_host, api_endpoint)
 
 	# Cookie Manager
 	cookiejar = cookielib.CookieJar()
@@ -70,13 +68,15 @@ def main(argv):
 	authenticationHttpReq = urllib2.Request(authentication_url, pData, authentication_headers)
 	authenticate_response = url_opener.open(authenticationHttpReq)
 
-	# Now go get the usage report data
-	usage_headers = { 'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' }
-	usageHttpReq = urllib2.Request(usage_url, pData, usage_headers)
-	usage_response = url_opener.open(usageHttpReq)
-	usage_content = usage_response.read()
+	# Now go get the user data
+	api_headers = { 'Accept' : 'application/json' }
+	apiHttpReq = urllib2.Request(rally_url, pData, api_headers)
+	api_response = url_opener.open(apiHttpReq)
+	api_content = json.loads(api_response.read())
 
-	print usage_content
+    # Parse the returned collection
+	print api_content['QueryResult']['Results'][0]['SubscriptionID']
 
 if __name__ == '__main__':
     main(sys.argv[1:])
+
