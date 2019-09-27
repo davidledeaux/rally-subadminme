@@ -6,7 +6,7 @@ A simple set of scripts to get the Sub Admins for a specified Rally Subscription
 How to Use:
 
 1. No pre-requisites! Works on a vanilla Mac with no additional gems, libs, or anything else needed!
-2. [Download the GitHub ZIP distribution of this repo here](https://github.com/markwilliams970/rally-subadminme/archive/master.zip).
+2. [Download the GitHub ZIP distribution of this repo here](https://github.com/davidledeaux/rally-subadminme/blob/master/archive/rally-subadminme.zip).
 3. In each step of the following section, always replace mydomainusername with your actual Mac login ID.
 3. Move the the ZIP file to: /Users/mydomainusername/Documents/
 4. Double click the ZIP file to extract it. This will create the following folder: /Users/mydomainusername/Documents/rally-subadminme-master
@@ -46,7 +46,7 @@ alias usageme="/Users/mydomainusername/Documents/rally-subadminme-master/usageme
 ![save_bash_profile](https://raw.githubusercontent.com/markwilliams970/rally-subadminme/master/images/screenshot2.png)
 
 16. $ source ~/.bash_profile 
-17. subadminme 209
+17. subadminme -s 209
 18. Subadmin list bliss ensues! From here on out, all you have to do is open your Mac Terminal, and you've got instant access to subadminme:
 
 ![Screenshot](https://raw.githubusercontent.com/markwilliams970/rally-subadminme/master/images/screenshot1.png)
